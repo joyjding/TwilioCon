@@ -7,7 +7,7 @@ from flask import render_template
 from twilio import twiml
 from twilio.rest import TwilioRestClient
 
-recording_url = None
+#recording_url = None
 
 # Pull in configuration from system environment variables
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -24,8 +24,8 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def hello_you():
     resp = twiml.Response()
-    resp.say("To hear some generated music, press 1. Otherwise, press 2. To record a message, press 3. To listen to the previous message, press 4.")
-    resp.gather(numDigits=1, action="handle-key", method="POST")
+    with resp.gather(numDigits=1, action="handle-key", method="POST") as g:
+        g.say("To hear some generated music, press 1. Otherwise, press 2. To record a message, press 3. To listen to the previous message, press 4.")
     return str(resp)
 
 @app.route("/handle-key", methods=['GET', 'POST'])     
@@ -33,7 +33,7 @@ def handle_key():
     digit_pressed = request.values.get('Digits', None)
     if digit_pressed == "0":
         resp = twiml.Response()
-        resp.dial("6174609720")
+        resp.dial("16174609720")
         resp.say("Connecting you to the master human")
         return str(resp)
     elif digit_pressed == "1":
@@ -46,20 +46,29 @@ def handle_key():
         return str(resp)
     elif digit_pressed == "3":
         resp = twiml.Response()
-        resp.say("Record yourself. Less than 15 seconds of glory, please.")
-        resp.record(maxLength="15", action="/handle-recording")
+        resp.say("Record yourself. Less than 15 seconds of glory, please.") 
+        resp.record(maxLength="15", action="/handle-recording") #TODO: Press # when you're done. Add param to record.
         resp.say("Great.")
         return str(resp)
     elif digit_pressed =="4":
         resp = twiml.Response()
-        resp.play(recording_url)
+        recordings = client.recordings.list()
+        #Recording attributes:
+        #from dir(recordings[0])
+        #['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', u'account_sid', u'api_version', 'auth', 'base_uri', u'call_sid', u'date_created', u'date_updated', 'delete', 'delete_instance', u'duration', 'formats', 'id_key', 'load', 'load_subresources', 'name', 'parent', 'request', u'sid', 'subresources', 'timeout', 'transcriptions', 'update_instance', 'uri']
+        resp.say("This is the last recording")
+        resp.play(recordings[0].uri)
+        resp.say("This is the second to last recording")
+        resp.play(recordings[1].uri)
+        resp.say("This is the third to last recording")
+        resp.play(recordings[2].uri)
         return str(resp)
     else:
         return redirect("/")
 
 @app.route('/handle-recording', methods=['GET', 'POST'])
 def handle_recording():
-    global recording_url
+    #global recording_url
     recording_url = request.values.get("RecordingUrl", None)
 
     resp = twiml.Response()
