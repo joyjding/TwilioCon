@@ -20,9 +20,11 @@ client = TwilioRestClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 app = Flask(__name__)
 
 # Render the home page
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route('/', methods=['GET', 'POST'])
+def hello_you():
+    resp = twiml.Response()
+    resp.say("Hello")
+    return str(resp) 
 
 # Handle a POST request to send a text message. This is called via ajax
 # on our web page
