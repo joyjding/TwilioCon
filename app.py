@@ -23,12 +23,27 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def hello_you():
     resp = twiml.Response()
-    resp.say("Hello")
-    return str(resp) 
+    resp.say("To hear some generated music, press 1. Otherwise, press 2")
+    resp.gather(numDigits=1, action="handle-key", method="POST")
+    return str(resp)
 
+@app.route("/handle-key", methods=['GET', 'POST'])     
+def handle_key():
+    digit_pressed = request.values.get('Digits', None)
+    if digit_pressed == "1":
+        resp = twiml.Response()
+        resp.say("la le lolo la loo hey hey")
+        return str(resp)
+    elif digit_pressed == "2":
+        resp = twiml.Response()
+        resp.say("Why didn't you want to hear the music?")
+        return str(resp)
+    else:
+        return redirect("/")
+
+@app.route('/message', methods=['POST'])
 # Handle a POST request to send a text message. This is called via ajax
 # on our web page
-@app.route('/message', methods=['POST'])
 def message():
     # Send a text message to the number provided
     message = client.sms.messages.create(to=request.form['to'],
